@@ -3,7 +3,6 @@ from sqlalchemy.dialects.mysql import JSON, LONGTEXT, YEAR
 
 from db_model.base import Base
 
-
 # ==================== 中文论文 ====================
 
 

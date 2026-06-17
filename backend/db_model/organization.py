@@ -2,7 +2,6 @@ from sqlalchemy import BigInteger, Column, Date, DateTime, Numeric, String, Text
 
 from db_model.base import Base
 
-
 # ==================== 国内机构 ====================
 
 
