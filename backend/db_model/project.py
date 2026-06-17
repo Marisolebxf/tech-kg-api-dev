@@ -12,7 +12,9 @@ class DwdZhProject(Base):
     title = Column(String(512), comment="项目的名称或标题")
     project_source = Column(String(64), comment="项目所属的资助来源或立项来源")
     funded_institution = Column(String(128), comment="获得项目资助的机构名称")
-    project_level = Column(Enum("国家级", "省级", "市级", "县级", "其他"), comment="项目所属的级别或层次")
+    project_level = Column(
+        Enum("国家级", "省级", "市级", "县级", "其他"), comment="项目所属的级别或层次"
+    )
     funded_amount = Column(Numeric(18, 2), comment="项目获得的资助经费金额，单位为万元")
     discipline = Column(String(256), comment="项目所属的学科领域")
     discipline_code = Column(String(256), comment="项目所属学科的分类代码")
@@ -64,7 +66,9 @@ class DwdEnProject(Base):
     title = Column(String(512), comment="项目的名称或标题")
     project_source = Column(String(64), comment="项目所属的资助来源或立项来源")
     funded_institution = Column(String(128), comment="获得项目资助的机构名称")
-    project_level = Column(Enum("国家级", "州级", "市级", "县级", "其他"), comment="项目所属的级别或层次")
+    project_level = Column(
+        Enum("国家级", "州级", "市级", "县级", "其他"), comment="项目所属的级别或层次"
+    )
     funded_amount = Column(Numeric(18, 2), comment="项目获得的资助经费金额，单位为美元")
     discipline = Column(String(256), comment="项目所属的学科领域")
     discipline_code = Column(String(256), comment="项目所属学科的分类代码")
