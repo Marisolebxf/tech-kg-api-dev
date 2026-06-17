@@ -10,6 +10,7 @@
 | FastAPI | 0.110.2 |
 | Redis | 7.0.1 |
 | aiomysql | 0.2.0 |
+| pymysql | 1.2.0 |
 | SQLAlchemy | 2.0.42 |
 | pydantic | 2.11.7 |
 
@@ -96,9 +97,52 @@ dao/
 数据模型和基础设施分别放在：
 
 ```text
-db_model/    # SQLAlchemy 表模型
+db_model/    # SQLAlchemy ORM 表模型（62 个模型类，与 DDL 一一对应）
 schemas/     # 原始建表 DDL（按数据域）+ 字段规范文档
 infra/       # MySQL、Redis、TRSGraph、模型服务等连接
+script/      # 维护脚本（init_db.py 一键建表等）
+```
+
+### db_model 使用说明
+
+`db_model/` 包含 62 张表的 SQLAlchemy ORM 模型，按数据域分文件：
+
+```text
+db_model/
+├── base.py              # DeclarativeBase 基类
+├── scholar.py           # 学者相关 6 表
+├── patent.py            # 专利相关 5 表
+├── paper.py             # 中文论文 9 表 + 英文论文 10 表
+├── project.py           # 国内项目 2 表 + 国外项目 2 表
+├── organization.py      # 国内机构 16 表 + 海外机构 8 表
+├── industry_chain.py    # 产业链 4 表
+└── __init__.py          # 统一导出所有模型
+```
+
+使用示例：
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from db_model import DwdScholar
+
+engine = create_engine("mysql+pymysql://root:123456789@127.0.0.1:3306/techkg")
+
+# 插入
+with Session(engine) as session:
+    session.add(DwdScholar(scholar_id="SCH001", name_zh="张三", paper_nums=42))
+    session.commit()
+
+# 读取（推荐 pandas）
+import pandas as pd
+df = pd.read_sql_table("dwd_scholar", engine)
+```
+
+### script 目录
+
+```bash
+# 一键建表（执行 schemas/ddl/ 下全部 62 张表的 DDL）
+uv run python script/init_db.py
 ```
 
 ### schemas 目录
