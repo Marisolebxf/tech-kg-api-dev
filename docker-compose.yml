@@ -1,12 +1,10 @@
 services:
-  api:
-    build: ./backend
-    container_name: tech-kg-api
+  tech-kg-prototype:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tech-kg-api-dev-prototype:latest
+    container_name: tech-kg-api-dev-prototype
     ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    volumes:
-      - ./backend:/app
-    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - "8080:80"
     restart: unless-stopped

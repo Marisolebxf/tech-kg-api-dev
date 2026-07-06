@@ -1,37 +1,24 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.pyc
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Virtual environment
-.venv/
-venv/
-env/
+node_modules
+dist
+dist-ssr
+*.local
 
-# uv
-.python-version
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-
-# Environment variables
-.env
-.env.local
-
-# IDE
-.vscode/
-.idea/
-
-# OS
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
-
-# Pytest
-.pytest_cache/
-.coverage
-htmlcov/
-server.log
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
