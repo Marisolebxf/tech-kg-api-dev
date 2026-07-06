@@ -1363,8 +1363,25 @@ print(response.json())</pre>
 .platform-processing {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
   gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(191, 215, 250, 0.96);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(245, 250, 255, 0.98), rgba(232, 242, 255, 0.86)),
+    #eef5ff;
+  box-shadow:
+    0 14px 30px rgba(48, 105, 194, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  align-content: start;
+}
+
+.platform-processing-flow,
+.platform-review {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-content: start;
 }
 
 .platform-config {
@@ -1413,6 +1430,7 @@ print(response.json())</pre>
   display: grid;
   gap: 10px;
   padding: 14px;
+  align-content: start;
 }
 
 .platform-timeline article {
@@ -1457,6 +1475,7 @@ print(response.json())</pre>
   display: grid;
   gap: 12px;
   padding: 14px;
+  align-content: start;
 }
 
 .platform-review article {
@@ -1719,22 +1738,31 @@ print(response.json())</pre>
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 16px;
-  align-items: start;
+  min-height: 100%;
+  align-items: stretch;
 }
 
 .platform-build,
 .platform-graph-summary {
   min-height: 0;
+  height: 100%;
 }
 
 .platform-build {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
 .platform-graph-summary {
   display: grid;
+  align-content: start;
   gap: 12px;
   padding-bottom: 14px;
+}
+
+.platform-build-footer {
+  margin-top: auto;
 }
 
 .platform-segmented {
