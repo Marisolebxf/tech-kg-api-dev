@@ -6,7 +6,6 @@ import ConstructionActionModal, { type ConstructionActionKey } from '../../compo
 import KgGraphCanvas from '../../components/kg-graph-canvas.vue'
 import { useToast } from '../../composables/use-toast'
 import {
-  getServiceGraphPreset,
   queryGraphPreset,
   relationCategoryMap,
   type GraphNodeData,
@@ -217,7 +216,6 @@ const detailModalOpen = ref(false)
 const detailModalPayload = ref<DetailModalPayload | null>(null)
 const constructionModalOpen = ref(false)
 const activeConstructionAction = ref<ConstructionActionKey | null>(null)
-const serviceGraphTick = ref(0)
 
 const { showToast } = useToast()
 
@@ -228,6 +226,27 @@ const activeResponseJson = computed(() => JSON.stringify({
   message: 'success',
   data: activeService.value.responseExample.data ?? activeService.value.responseExample,
 }, null, 2))
+const activeRequestEntries = computed(() =>
+  activeService.value.requestFields.map((field) => ({
+    label: field.description,
+    key: field.name,
+    required: field.required ?? false,
+    value: Array.isArray(activeService.value.requestExample[field.name])
+      ? (activeService.value.requestExample[field.name] as string[]).join(', ')
+      : String(activeService.value.requestExample[field.name] ?? '-'),
+  })),
+)
+const serviceConsoleStats = computed(() => [
+  { label: '服务标识', value: activeService.value.key },
+  { label: '请求方法', value: activeService.value.method },
+  { label: '接口路径', value: activeService.value.endpoint },
+  { label: '参数数量', value: String(activeService.value.requestFields.length) },
+])
+const serviceCallLogs = computed(() => [
+  { time: '10:30:12', level: 'SUCCESS', message: `已完成 ${activeService.value.title} 调用，返回 code=0。` },
+  { time: '10:30:11', level: 'INFO', message: `请求参数已标准化，准备发送到 ${activeService.value.endpoint}。` },
+  { time: '10:30:09', level: 'INFO', message: `命中服务路由 ${activeService.value.key}，开始装配请求体。` },
+])
 
 watch(
   () => props.initialTab,
@@ -334,22 +353,10 @@ const queryActiveCategories = computed(() => {
   return relationCategoryMap[queryRelationFilter.value] ?? [queryRelationFilter.value]
 })
 
-const serviceGraph = computed(() => {
-  serviceGraphTick.value
-  return getServiceGraphPreset(activeServiceKey.value)
-})
-
 const selectedQueryNode = computed(() => {
   return (
     queryGraphPreset.nodes.find((node) => node.id === selectedGraphNodeId.value) ??
     queryGraphPreset.nodes[0]
-  )
-})
-
-const selectedServiceNode = computed(() => {
-  return (
-    serviceGraph.value.nodes.find((node) => node.id === selectedGraphNodeId.value) ??
-    serviceGraph.value.nodes[0]
   )
 })
 
@@ -444,10 +451,7 @@ function handleStartTask() {
 }
 
 function handleExecuteService() {
-  void runWithLoading(`${activeService.value.title} 调用成功，已刷新图谱结果`, () => {
-    serviceGraphTick.value += 1
-    selectedGraphNodeId.value = 'core'
-  })
+  void runWithLoading(`${activeService.value.title} 调用成功，已刷新请求与响应结果`)
 }
 
 function handleCopyEndpoint() {
@@ -1019,41 +1023,73 @@ const pageMeta = computed(() => {
       </section>
 
       <template v-if="activeServiceMode === 'test'">
-        <section class="kg-panel platform-service-graph">
-        <div class="kg-panel__header">
-          <h2 class="kg-panel__title">图谱结果</h2>
-          <span>{{ activeService.title }}</span>
-        </div>
-        <KgGraphCanvas
-          :key="activeServiceKey"
-          :nodes="serviceGraph.nodes"
-          :edges="serviceGraph.edges"
-          :selected-node-id="selectedGraphNodeId"
-          :aria-label="`${activeService.title}图谱结果`"
-          @select-node="openNodeDetail"
-        />
+        <section class="kg-panel platform-service-run">
+          <div class="kg-panel__header">
+            <h2 class="kg-panel__title">调用结果概览</h2>
+            <span>{{ activeService.title }} / {{ activeService.method }}</span>
+          </div>
+          <div class="platform-service-run__body">
+            <div class="platform-service-summary">
+              <div v-for="item in serviceConsoleStats" :key="item.label">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </div>
+            </div>
+            <div class="platform-service-request">
+              <strong>请求摘要</strong>
+              <dl>
+                <div v-for="item in activeRequestEntries" :key="item.key">
+                  <dt>{{ item.label }}</dt>
+                  <dd>
+                    <span>{{ item.value }}</span>
+                    <em v-if="item.required">必填</em>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            <div class="platform-result-grid">
+              <div v-for="row in activeService.resultRows" :key="row.label">
+                <span>{{ row.label }}</span>
+                <strong>{{ row.value }}</strong>
+              </div>
+            </div>
+            <dl class="platform-service-info">
+              <div><dt>命中服务</dt><dd>{{ activeService.title }}</dd></div>
+              <div><dt>状态码</dt><dd>0 / success</dd></div>
+              <div><dt>更新时间</dt><dd>2026-07-06 10:30</dd></div>
+            </dl>
+          </div>
         </section>
 
-        <aside class="kg-panel platform-service-result">
+        <aside class="kg-panel platform-service-debug">
           <div class="kg-panel__header">
-            <h2 class="kg-panel__title">结构化结果</h2>
+            <h2 class="kg-panel__title">请求与响应</h2>
           </div>
-          <div class="platform-result-grid">
-            <div v-for="row in activeService.resultRows" :key="row.label">
-              <span>{{ row.label }}</span>
-              <strong>{{ row.value }}</strong>
+          <div class="platform-service-debug__body">
+            <div class="platform-service-payload">
+              <strong>请求体</strong>
+              <pre>{{ activeRequestJson }}</pre>
             </div>
-          </div>
-          <dl class="platform-service-info">
-            <div><dt>核心对象</dt><dd>{{ selectedServiceNode.label }} / {{ selectedServiceNode.entityType }}</dd></div>
-            <div><dt>置信度</dt><dd>{{ selectedServiceNode.confidence.toFixed(2) }}</dd></div>
-            <div><dt>更新时间</dt><dd>2026-07-06 10:30</dd></div>
-          </dl>
-          <div class="platform-evidence">
-            <strong>证据摘要</strong>
-            <ul>
-              <li v-for="(line, index) in activeService.evidence.slice(0, 2)" :key="index">{{ line }}</li>
-            </ul>
+            <div class="platform-service-payload">
+              <strong>响应体</strong>
+              <pre>{{ activeResponseJson }}</pre>
+            </div>
+            <div class="platform-evidence">
+              <strong>证据摘要</strong>
+              <ul>
+                <li v-for="(line, index) in activeService.evidence.slice(0, 3)" :key="index">{{ line }}</li>
+              </ul>
+            </div>
+            <div class="platform-service-log">
+              <strong>调用日志</strong>
+              <ul>
+                <li v-for="item in serviceCallLogs" :key="`${item.time}-${item.message}`">
+                  <span>{{ item.time }}</span>
+                  <b>{{ item.level }}</b>
+                  <p>{{ item.message }}</p>
+                </li>
+              </ul>
+            </div>
           </div>
         </aside>
       </template>
@@ -2147,9 +2183,9 @@ print(response.json())</pre>
 }
 
 .platform-query-graph,
-.platform-service-graph,
+.platform-service-run,
 .platform-detail,
-.platform-service-result,
+.platform-service-debug,
 .platform-api-doc {
   min-height: 0;
 }
@@ -2275,8 +2311,109 @@ print(response.json())</pre>
   background-size: 28px 28px, 28px 28px, auto, auto;
 }
 
-.platform-service-result {
+.platform-service-run {
   overflow: auto;
+}
+
+.platform-service-run__body,
+.platform-service-debug__body {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.platform-service-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.platform-service-summary div {
+  display: grid;
+  gap: 6px;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid #dce9ff;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 255, 0.92));
+}
+
+.platform-service-summary span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.platform-service-summary strong {
+  color: var(--text-primary);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.platform-service-request {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dce9ff;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.platform-service-request strong,
+.platform-service-payload strong,
+.platform-service-log strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.platform-service-request dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.platform-service-request dl div {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 8px 0;
+  border-bottom: 1px solid #eef3fb;
+}
+
+.platform-service-request dl div:last-child {
+  border-bottom: 0;
+}
+
+.platform-service-request dt,
+.platform-service-request dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.platform-service-request dt {
+  color: var(--text-secondary);
+}
+
+.platform-service-request dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.platform-service-request dd em {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eef5ff;
+  color: var(--primary);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 18px;
 }
 
 .platform-node circle {
@@ -2477,6 +2614,87 @@ print(response.json())</pre>
   color: var(--text-secondary);
 }
 
+.platform-service-debug {
+  overflow: auto;
+}
+
+.platform-service-payload {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dce9ff;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.platform-service-payload pre {
+  min-height: 140px;
+  max-height: 220px;
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  color: #344054;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  background: #f3f8ff;
+}
+
+.platform-service-log {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dce9ff;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.platform-service-log ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platform-service-log li {
+  display: grid;
+  grid-template-columns: 56px 56px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef3fb;
+}
+
+.platform-service-log li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.platform-service-log span,
+.platform-service-log b,
+.platform-service-log p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.platform-service-log span {
+  color: var(--text-tertiary);
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.platform-service-log b {
+  color: #00a870;
+}
+
+.platform-service-log p {
+  color: var(--text-secondary);
+}
+
 .platform-api-doc {
   overflow: hidden;
 }
@@ -2644,12 +2862,16 @@ print(response.json())</pre>
 
   .platform-graph-summary,
   .platform-detail,
-  .platform-service-result,
+  .platform-service-debug,
   .platform-review {
     max-height: 360px;
   }
 
   .platform-service-console__body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .platform-service-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
