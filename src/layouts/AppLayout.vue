@@ -198,8 +198,8 @@ onErrorCaptured((error) => {
 
 .app-brand__name {
   flex: 0 0 auto;
-  font-size: 19px;
-  line-height: 26px;
+  font-size: 18px;
+  line-height: 25px;
   font-weight: 700;
   color: #10264c;
   white-space: nowrap;
@@ -276,13 +276,13 @@ onErrorCaptured((error) => {
   grid-template-columns: 22px minmax(0, 1fr) 14px;
   align-items: center;
   gap: 12px;
-  min-height: 46px;
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid transparent;
   border-radius: 6px;
   color: #243b63;
-  font-size: 17px;
-  line-height: 24px;
+  font-size: 16px;
+  line-height: 23px;
   white-space: nowrap;
   transition:
     background 0.16s ease,
@@ -383,14 +383,14 @@ onErrorCaptured((error) => {
   z-index: 1;
   grid-template-columns: 32px minmax(0, 1fr);
   width: min(224px, calc(100% - 30px));
-  min-height: 48px;
+  min-height: 44px;
   margin: 4px 0 4px 30px;
   padding: 0 12px;
   border-color: rgba(179, 209, 255, 0.42);
   background: rgba(255, 255, 255, 0.42);
   color: #2e4770;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .app-nav__item--sub em {
@@ -437,8 +437,8 @@ onErrorCaptured((error) => {
   width: 100%;
   min-width: 0;
   margin-top: 10px;
-  font-size: 17px;
-  line-height: 24px;
+  font-size: 16px;
+  line-height: 23px;
   color: #243b63;
 }
 

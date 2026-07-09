@@ -1401,16 +1401,16 @@ print(response.json())</pre>
 .platform-page-head h1 {
   margin: 0;
   color: #10264c;
-  font-size: 22px;
-  line-height: 30px;
+  font-size: 20px;
+  line-height: 28px;
   font-weight: 700;
 }
 
 .platform-page-head p {
   margin: 2px 0 0;
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .platform-content {
@@ -1573,13 +1573,13 @@ print(response.json())</pre>
 
 .platform-table th,
 .platform-table td {
-  height: 42px;
+  height: 36px;
   min-width: 110px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   color: var(--text-primary);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 20px;
   text-align: left;
   overflow-wrap: anywhere;
 }
@@ -2319,7 +2319,7 @@ print(response.json())</pre>
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto minmax(620px, 1fr);
-  gap: 16px;
+  gap: 14px;
   min-height: 0;
   align-items: stretch;
 }
@@ -2330,7 +2330,7 @@ print(response.json())</pre>
 
 .platform-build-progress {
   grid-column: 1 / -1;
-  min-height: 236px;
+  min-height: 210px;
   overflow: auto;
 }
 
@@ -2375,8 +2375,8 @@ print(response.json())</pre>
 .platform-audit-reasons {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
 }
 
 .platform-build-results__body {
@@ -2391,8 +2391,8 @@ print(response.json())</pre>
 .platform-audit-reasons article {
   position: relative;
   overflow: hidden;
-  min-height: 86px;
-  padding: 14px 16px;
+  min-height: 76px;
+  padding: 12px 14px;
   border: 1px solid #dce9ff;
   border-radius: 9px;
   background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(240,247,255,0.9));
@@ -2429,8 +2429,8 @@ print(response.json())</pre>
   display: block;
   margin-top: 4px;
   color: var(--primary);
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 20px;
+  line-height: 28px;
 }
 
 .platform-audit-reasons strong {
@@ -2449,12 +2449,12 @@ print(response.json())</pre>
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .platform-construction-kpis article {
-  min-height: 102px;
-  padding: 18px 20px;
+  min-height: 88px;
+  padding: 15px 16px;
   border: 1px solid #bdd7ff;
   border-radius: 10px;
   background:
@@ -2464,23 +2464,23 @@ print(response.json())</pre>
 
 .platform-construction-kpis span {
   color: var(--text-secondary);
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .platform-construction-kpis strong {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--primary);
-  font-size: 32px;
-  line-height: 40px;
+  font-size: 26px;
+  line-height: 34px;
 }
 
 .platform-construction-kpis p {
   margin: 6px 0 0;
   color: var(--text-tertiary);
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .platform-build-pipeline {
@@ -2490,17 +2490,17 @@ print(response.json())</pre>
 .platform-build-pipeline__body {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
-  padding: 16px;
+  gap: 14px;
+  padding: 14px;
 }
 
 .platform-build-pipeline__body article {
   position: relative;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  gap: 10px;
-  min-height: 126px;
-  padding: 16px;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 108px;
+  padding: 13px;
   border: 1px solid #dce9ff;
   border-radius: 8px;
   background:
@@ -2520,12 +2520,12 @@ print(response.json())</pre>
 .platform-build-pipeline__body i {
   display: inline-grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--primary);
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 700;
 }
@@ -2533,16 +2533,16 @@ print(response.json())</pre>
 .platform-build-pipeline__body span,
 .platform-schema-mapping__body span {
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .platform-build-pipeline__body strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--primary);
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 19px;
+  line-height: 26px;
 }
 
 .platform-build-pipeline__body em {
@@ -2558,10 +2558,10 @@ print(response.json())</pre>
 
 .platform-build-pipeline__body p,
 .platform-schema-mapping__body p {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .platform-schema-mapping {
