@@ -154,7 +154,7 @@ onErrorCaptured((error) => {
   flex-direction: column;
   height: 100%;
   min-width: 0;
-  padding: 20px 16px 16px;
+  padding: 18px 14px 14px;
   overflow: hidden;
   color: var(--text-primary);
   border-right: 1px solid rgba(132, 178, 246, 0.82);
@@ -184,22 +184,22 @@ onErrorCaptured((error) => {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 48px;
-  padding-bottom: 18px;
+  gap: 10px;
+  height: 44px;
+  padding-bottom: 14px;
   border-bottom: 1px solid rgba(84, 139, 220, 0.22);
 }
 
 .app-brand__logo {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
 }
 
 .app-brand__name {
   flex: 0 0 auto;
-  font-size: 22px;
-  line-height: 30px;
+  font-size: 19px;
+  line-height: 26px;
   font-weight: 700;
   color: #10264c;
   white-space: nowrap;
@@ -256,7 +256,7 @@ onErrorCaptured((error) => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: 18px;
+  margin-top: 16px;
   padding-bottom: 14px;
   overflow-x: hidden;
   overflow-y: auto;
@@ -275,14 +275,14 @@ onErrorCaptured((error) => {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) 14px;
   align-items: center;
-  gap: 14px;
-  min-height: 54px;
-  padding: 0 16px;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 14px;
   border: 1px solid transparent;
   border-radius: 6px;
   color: #243b63;
-  font-size: 20px;
-  line-height: 28px;
+  font-size: 17px;
+  line-height: 24px;
   white-space: nowrap;
   transition:
     background 0.16s ease,
@@ -317,17 +317,17 @@ onErrorCaptured((error) => {
 }
 
 .app-nav__group {
-  margin: 18px 8px 10px;
+  margin: 16px 8px 8px;
   color: #567198;
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 22px;
   font-weight: 500;
   letter-spacing: 0;
 }
 
 .app-nav__icon {
-  width: 21px;
-  height: 21px;
+  width: 19px;
+  height: 19px;
   align-self: center;
   justify-self: center;
   object-fit: contain;
@@ -355,8 +355,8 @@ onErrorCaptured((error) => {
   position: relative;
   z-index: 1;
   grid-template-columns: 1fr;
-  width: min(246px, calc(100% - 28px));
-  margin-left: 28px;
+  width: min(218px, calc(100% - 24px));
+  margin-left: 24px;
   color: #165dff;
   border-color: rgba(87, 150, 242, 0.76);
   background:
@@ -381,28 +381,28 @@ onErrorCaptured((error) => {
 .app-nav__item--sub {
   position: relative;
   z-index: 1;
-  grid-template-columns: 36px minmax(0, 1fr);
-  width: min(250px, calc(100% - 34px));
-  min-height: 56px;
-  margin: 4px 0 4px 34px;
-  padding: 0 14px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  width: min(224px, calc(100% - 30px));
+  min-height: 48px;
+  margin: 4px 0 4px 30px;
+  padding: 0 12px;
   border-color: rgba(179, 209, 255, 0.42);
   background: rgba(255, 255, 255, 0.42);
   color: #2e4770;
-  font-size: 18px;
-  line-height: 27px;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .app-nav__item--sub em {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 24px;
+  width: 28px;
+  height: 22px;
   border-radius: 999px;
   background: rgba(22, 93, 255, 0.08);
   color: #4c74b4;
-  font-size: 13px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 700;
 }
@@ -437,14 +437,14 @@ onErrorCaptured((error) => {
   width: 100%;
   min-width: 0;
   margin-top: 10px;
-  font-size: 20px;
-  line-height: 28px;
+  font-size: 17px;
+  line-height: 24px;
   color: #243b63;
 }
 
 .app-user__avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -460,7 +460,7 @@ onErrorCaptured((error) => {
 .app-main {
   min-width: 0;
   height: 100%;
-  padding: 20px 22px;
+  padding: 18px 20px;
   overflow: hidden;
 }
 
@@ -501,12 +501,12 @@ onErrorCaptured((error) => {
   }
 
   .app-nav__item {
-    min-height: 48px;
+    min-height: 44px;
   }
 
   .app-nav__item--sub,
   .app-nav__item--active {
-    width: min(238px, calc(100% - 34px));
+    width: min(218px, calc(100% - 30px));
   }
 }
 
@@ -520,14 +520,14 @@ onErrorCaptured((error) => {
   }
 
   .app-nav__item {
-    min-height: 42px;
-    font-size: 18px;
-    line-height: 25px;
+    min-height: 40px;
+    font-size: 16px;
+    line-height: 23px;
   }
 
   .app-nav__item--sub,
   .app-nav__item--active {
-    width: min(238px, calc(100% - 34px));
+    width: min(218px, calc(100% - 30px));
   }
 }
 </style>

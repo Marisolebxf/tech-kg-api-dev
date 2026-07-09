@@ -1328,11 +1328,11 @@ print(response.json())</pre>
 .platform-page {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 18px;
+  gap: 16px;
   height: 100%;
   min-width: 0;
   color: var(--text-primary);
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .platform-hero {
@@ -1341,9 +1341,9 @@ print(response.json())</pre>
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 20px;
-  min-height: 108px;
-  padding: 26px 32px;
+  gap: 18px;
+  min-height: 92px;
+  padding: 22px 28px;
   border: 1px solid rgba(132, 178, 246, 0.86);
   border-radius: 12px;
   background:
@@ -1373,8 +1373,8 @@ print(response.json())</pre>
 .platform-hero h1 {
   margin: 0;
   color: #10264c;
-  font-size: 34px;
-  line-height: 44px;
+  font-size: 28px;
+  line-height: 36px;
   font-weight: 700;
 }
 
@@ -1387,8 +1387,8 @@ print(response.json())</pre>
 .platform-hero__subtitle {
   margin: 0;
   color: #4b6288;
-  font-size: 18px;
-  line-height: 28px;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .platform-page-head {
@@ -1422,7 +1422,7 @@ print(response.json())</pre>
 .platform-overview {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
-  gap: 16px;
+  gap: 14px;
 }
 
 .platform-metrics {
@@ -1435,9 +1435,9 @@ print(response.json())</pre>
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 6px;
-  min-height: 124px;
-  padding: 22px;
+  gap: 5px;
+  min-height: 104px;
+  padding: 18px;
   border: 1px solid #bed8ff;
   border-radius: 8px;
   background:
@@ -1461,15 +1461,15 @@ print(response.json())</pre>
 .platform-metric span {
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 15px;
+  line-height: 22px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .platform-metric strong {
-  font-size: 40px;
-  line-height: 48px;
+  font-size: 32px;
+  line-height: 40px;
   font-weight: 700;
 }
 
@@ -1494,22 +1494,22 @@ print(response.json())</pre>
 .platform-processing-flow .kg-panel__header span,
 .platform-config .kg-panel__header span {
   color: var(--text-tertiary);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .platform-pipeline {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
-  padding: 18px;
+  padding: 16px;
 }
 
 .platform-pipeline__step {
   position: relative;
   display: grid;
-  gap: 8px;
-  min-height: 118px;
-  padding: 18px;
+  gap: 7px;
+  min-height: 106px;
+  padding: 16px;
   border: 1px solid #e0ebfb;
   border-radius: 8px;
   background:
@@ -1534,8 +1534,8 @@ print(response.json())</pre>
 }
 
 .platform-pipeline__step strong {
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .platform-pipeline__step div span,
@@ -1547,20 +1547,20 @@ print(response.json())</pre>
   border-radius: 999px;
   background: var(--primary-subtle);
   color: var(--primary);
-  font-size: 15px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
 .platform-pipeline__step p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .platform-pipeline__step em {
   color: var(--text-primary);
-  font-size: 22px;
+  font-size: 19px;
   font-style: normal;
   font-weight: 600;
 }
@@ -3225,8 +3225,8 @@ print(response.json())</pre>
 .platform-service-summary strong {
   color: var(--text-primary);
   font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 16px;
-  line-height: 22px;
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .platform-service-request {

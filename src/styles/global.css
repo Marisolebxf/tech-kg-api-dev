@@ -19,8 +19,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 54px;
-  padding: 0 18px;
+  min-height: 48px;
+  padding: 0 16px;
   border-bottom: 1px solid rgba(191, 215, 250, 0.96);
   background:
     linear-gradient(90deg, rgba(22, 93, 255, 0.075), transparent 46%),
@@ -31,8 +31,8 @@
   position: relative;
   margin: 0;
   color: var(--text-primary);
-  font-size: 20px;
-  line-height: 28px;
+  font-size: 17px;
+  line-height: 24px;
   font-weight: 600;
 }
 
@@ -41,7 +41,7 @@
   top: 4px;
   left: -10px;
   width: 3px;
-  height: 16px;
+  height: 14px;
   border-radius: 2px;
   background: linear-gradient(180deg, #165dff, #22d3ee);
   content: "";
