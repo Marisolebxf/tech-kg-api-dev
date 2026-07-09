@@ -296,6 +296,7 @@ onUnmounted(() => {
 .platform-node.is-paper circle { fill: var(--node-paper, #762bd7); }
 .platform-node.is-topic circle { fill: var(--node-topic, #1f8ff1); }
 .platform-node.is-project circle { fill: var(--node-project, #eb2aa3); }
+.platform-node.is-event circle { fill: var(--graph-gold, #f59e0b); }
 
 .platform-node.is-selected circle {
   stroke: var(--primary);

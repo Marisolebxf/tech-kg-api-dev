@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
+import BusinessServiceView from '../views/business-service/BusinessServiceView.vue'
 import PlatformWorkbenchView from '../views/platform/PlatformWorkbenchView.vue'
 
 const serviceRoutes = [
@@ -56,8 +57,7 @@ export const router = createRouter({
     ...serviceRoutes.map((route) => ({
       path: route.path,
       name: route.name,
-      component: PlatformWorkbenchView,
-      props: { initialTab: 'service', initialServiceKey: route.serviceKey },
+      component: BusinessServiceView,
       meta: { title: route.title },
     })),
   ],

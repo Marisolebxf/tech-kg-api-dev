@@ -1,4 +1,4 @@
-export type GraphNodeType = 'main' | 'expert' | 'org' | 'company' | 'paper' | 'topic' | 'project'
+export type GraphNodeType = 'main' | 'expert' | 'org' | 'company' | 'paper' | 'topic' | 'project' | 'event'
 
 export interface GraphNodeData {
   id: string
@@ -154,7 +154,7 @@ export const queryGraphPreset: GraphPreset = {
       label: '腾讯',
       nodeType: 'company',
       x: 302,
-      y: 344,
+      y: 326,
       entityType: '科技企业',
       confidence: 0.8,
       relations: '企业关联 1',
@@ -176,11 +176,33 @@ export const queryGraphPreset: GraphPreset = {
       label: '项目03',
       nodeType: 'project',
       x: 498,
-      y: 360,
+      y: 342,
       entityType: '科研项目',
       confidence: 0.81,
       relations: '项目参与 1',
       evidence: ['项目阶段成果已结构化入库。'],
+    },
+    {
+      id: 'event-1',
+      label: '湾区产业论坛',
+      nodeType: 'event',
+      x: 382,
+      y: 360,
+      entityType: '产业事件',
+      confidence: 0.84,
+      relations: '事件共现 2',
+      evidence: ['产业链事件与专家、企业、项目存在共现关系。'],
+    },
+    {
+      id: 'event-2',
+      label: '芯片投融资',
+      nodeType: 'event',
+      x: 704,
+      y: 330,
+      entityType: '产业事件',
+      confidence: 0.78,
+      relations: '风险事件 1',
+      evidence: ['投融资事件与企业、产业方向和项目阶段关联。'],
     },
   ],
   edges: [
@@ -197,6 +219,9 @@ export const queryGraphPreset: GraphPreset = {
     { id: 'e11', from: 'paper-1', to: 'topic-3', label: '主题关联', category: '间接关系' },
     { id: 'e12', from: 'paper-1', to: 'project-3', label: '项目成果', category: '间接关系' },
     { id: 'e13', from: 'project-1', to: 'paper-2', label: '成果引用', category: '间接关系' },
+    { id: 'e14', from: 'company-1', to: 'event-1', label: '事件参与', category: '产业事件' },
+    { id: 'e15', from: 'event-1', to: 'topic-3', label: '产业影响', category: '产业事件' },
+    { id: 'e16', from: 'company-2', to: 'event-2', label: '投融资事件', category: '产业事件' },
   ],
 }
 

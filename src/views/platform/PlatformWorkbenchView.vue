@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import KgDetailModal, { type DetailModalPayload } from '../../components/kg-detail-modal.vue'
-import ConstructionActionModal, { type ConstructionActionKey } from '../../components/construction-action-modal.vue'
 import KgGraphCanvas from '../../components/kg-graph-canvas.vue'
 import { useToast } from '../../composables/use-toast'
 import {
@@ -204,21 +204,24 @@ const activeTab = ref<PlatformTab>(props.initialTab ?? 'overview')
 const activeServiceKey = ref(props.initialServiceKey ?? modules[0]?.key ?? '')
 const activeBuildTab = ref<'entity' | 'relation' | 'property' | 'rule'>('entity')
 const activeServiceMode = ref<'test' | 'api'>('test')
-const selectedQueryType = ref('科技专家')
+const selectedQueryType = ref('全部图谱')
 const queryKeyword = ref('张明远')
-const queryRelationFilter = ref('论文合作')
+const queryRelationFilter = ref('全部关系')
 const queryConfidence = ref('>= 0.75')
 const queryApplied = ref(true)
 const buildSearchKeyword = ref('')
 const buildStatusFilter = ref('全部')
+const buildSourceBatch = ref('全部批次')
 const isActionLoading = ref(false)
 const selectedGraphNodeId = ref<string | null>('core')
 const detailModalOpen = ref(false)
 const detailModalPayload = ref<DetailModalPayload | null>(null)
-const constructionModalOpen = ref(false)
-const activeConstructionAction = ref<ConstructionActionKey | null>(null)
+const traceModalOpen = ref(false)
+const preserveBuildFilters = ref(false)
+const buildAuditContext = ref<{ title: string; batch: string } | null>(null)
 
 const { showToast } = useToast()
+const router = useRouter()
 
 const activeService = computed(() => modules.find((item) => item.key === activeServiceKey.value) ?? modules[0])
 const activeRequestJson = computed(() => JSON.stringify(activeService.value.requestExample, null, 2))
@@ -297,12 +300,6 @@ const qualityRows = [
   { label: '规则命中覆盖率', value: '86.9%', width: 87 },
 ]
 
-const qualityGates = [
-  { label: '自动入库', value: '7,604', desc: '置信度 ≥ 0.85' },
-  { label: '人工审核', value: '326', desc: '低置信度或冲突' },
-  { label: '规则回写', value: '42', desc: '审核结果沉淀样本' },
-]
-
 const pipeline = [
   { name: '数据接入', count: '12,438 条', status: '完成', desc: '多源数据读取与批次登记' },
   { name: '清洗标准化', count: '11,982 条', status: '完成', desc: '字段归一与缺失校验' },
@@ -317,31 +314,28 @@ const taskRows = [
   { batch: 'KG-INC-20260706-02', source: '企业工商库', stage: '属性更新', status: '待审核', entities: '486', relations: '1,280', conflicts: '86' },
   { batch: 'KG-FULL-20260705-08', source: '专家人才库', stage: '图谱入库', status: '完成', entities: '18,420', relations: '62,117', conflicts: '0' },
 ]
-
-const discoveryRows = [
-  { type: '新增实体', count: '3,261', desc: '含企业、机构、专家等候选实体' },
-  { type: '新增关系', count: '8,942', desc: '论文合作、企业关联、事件参与' },
-  { type: '新增属性', count: '1,203', desc: '论文数量、被引、经营状态等' },
-  { type: '潜在隐藏关系', count: '286', desc: '路径推理发现的间接关联' },
-  { type: '冲突数据', count: '326', desc: '别名冲突与证据不足项' },
-]
+const selectedProcessingTaskBatch = ref(taskRows[0]?.batch ?? '')
+const selectedProcessingTask = computed(() => (
+  taskRows.find((row) => row.batch === selectedProcessingTaskBatch.value) ?? taskRows[0]
+))
 
 const entityRows = [
-  { name: '张明远', type: '科技专家', match: '张明远 / Zhang Mingyuan', score: '0.92', action: '建议合并' },
-  { name: '先进计算实验室', type: '机构团队', match: '先进计算与智能系统实验室', score: '0.87', action: '待人工确认' },
-  { name: '华南智能芯片有限公司', type: '科技企业', match: '无高相似候选', score: '0.31', action: '创建新实体' },
+  { name: '张明远', type: '科技专家', match: '张明远 / Zhang Mingyuan', score: '0.92', action: '建议合并', status: '待审核', batch: 'KG-INC-20260706-01', auditTitle: '实体重复疑似冲突' },
+  { name: '先进计算实验室', type: '机构团队', match: '先进计算与智能系统实验室', score: '0.87', action: '待人工确认', status: '待审核', batch: 'KG-INC-20260706-01', auditTitle: '实体重复疑似冲突' },
+  { name: '华南智能芯片有限公司', type: '科技企业', match: '无高相似候选', score: '0.31', action: '创建新实体', status: '冲突数据', batch: 'KG-INC-20260706-02', auditTitle: '新增实体待确认' },
 ]
 
 const relationRows = [
-  { source: '张明远', target: '李佳宁', relation: '论文合作', evidence: '共同发表论文 4 篇', confidence: '0.94', status: '自动入库' },
-  { source: '张明远', target: '王青', relation: '校友关系', evidence: '同校同院系，时间重叠 2 年', confidence: '0.78', status: '待审核' },
-  { source: '李佳宁', target: '湾区智能制造联盟', relation: '产业事件参与', evidence: 'TOP-N 事件报道与项目名单', confidence: '0.71', status: '待审核' },
+  { source: '张明远', target: '李佳宁', relation: '论文合作', evidence: '共同发表论文 4 篇', confidence: '0.94', status: '自动入库', batch: 'KG-FULL-20260705-08', auditTitle: '论文合作自动通过' },
+  { source: '华南智能芯片', target: '腾讯', relation: '企业合作', evidence: '单一网页来源，缺少工商交叉验证', confidence: '0.74', status: '待审核', batch: 'KG-INC-20260706-01', auditTitle: '关系证据不足' },
+  { source: '张明远', target: '王青', relation: '校友关系', evidence: '同校同院系，时间重叠 2 年', confidence: '0.78', status: '待审核', batch: 'KG-INC-20260706-02', auditTitle: '校友关系低置信度' },
+  { source: '李佳宁', target: '湾区智能制造联盟', relation: '产业事件参与', evidence: 'TOP-N 事件报道与项目名单', confidence: '0.71', status: '待审核', batch: 'KG-FULL-20260705-08', auditTitle: '产业链事件共现' },
 ]
 
 const propertyRows = [
-  { object: '张明远', property: '论文数量', oldValue: '128', newValue: '132', rule: '动态属性自动更新' },
-  { object: '李佳宁', property: '被引次数', oldValue: '3,421', newValue: '3,568', rule: '超过阈值自动入库' },
-  { object: '某科技企业', property: '经营状态', oldValue: '存续', newValue: '注销风险', rule: '冲突数据进入审核' },
+  { object: '张明远', property: '论文数量', oldValue: '128', newValue: '132', rule: '动态属性自动更新', status: '待审核', batch: 'KG-INC-20260706-02', auditTitle: '属性来源不一致' },
+  { object: '李佳宁', property: '被引次数', oldValue: '3,421', newValue: '3,568', rule: '超过阈值自动入库', status: '自动入库', batch: 'KG-FULL-20260705-08', auditTitle: '高置信度属性更新' },
+  { object: '某科技企业', property: '经营状态', oldValue: '存续', newValue: '注销风险', rule: '冲突数据进入审核', status: '冲突数据', batch: 'KG-INC-20260706-02', auditTitle: '属性来源不一致' },
 ]
 
 const ruleRows = [
@@ -350,16 +344,22 @@ const ruleRows = [
   { name: '企业关联角色识别', type: '属性/关系识别', method: '正则 + 页面字段定位 + 人工确认', threshold: '0.80', status: '调试中' },
 ]
 
-const queryTypes = ['科技专家', '科技企业', '论文成果', '机构团队', '产业链节点']
-const relationFilters = ['直接关系', '间接关系', '同事', '校友', '论文合作', '企业关联', '产业事件']
+const queryTypes = ['全部图谱', '专家-企业-论文-项目综合图', '产业链事件关联图', '入库候选综合图']
+const relationFilters = ['全部关系', '直接关系', '间接关系', '同事', '校友', '论文合作', '企业关联', '产业事件']
+
+const graphEntitySummary = computed(() => {
+  return Array.from(new Set(queryGraphPreset.nodes.map((node) => node.entityType))).join(' · ')
+})
+
+const queryGraphStats = computed(() => `${queryGraphPreset.nodes.length} 个节点 / ${queryGraphPreset.edges.length} 条关系`)
 
 const querySummary = computed(() => {
-  if (!queryApplied.value) return '先设置查询条件，点击「查询」生成核心子图'
+  if (!queryApplied.value) return '输入关键词后展示专家、企业、论文、机构、项目和事件的一张综合图'
   return `${selectedQueryType.value} / ${queryKeyword.value} / ${queryRelationFilter.value}`
 })
 
 const queryActiveCategories = computed(() => {
-  if (!queryApplied.value) return null
+  if (!queryApplied.value || queryRelationFilter.value === '全部关系') return null
   return relationCategoryMap[queryRelationFilter.value] ?? [queryRelationFilter.value]
 })
 
@@ -370,59 +370,98 @@ const selectedQueryNode = computed(() => {
   )
 })
 
+const buildBatchOptions = ['全部批次', 'KG-INC-20260706-01', 'KG-INC-20260706-02', 'KG-FULL-20260705-08']
+
+function matchesBuildFilters(keywordFields: string[], status: string, batch: string) {
+  const keyword = buildSearchKeyword.value.trim()
+  const keywordMatch = !keyword || keywordFields.some((field) => field.includes(keyword))
+  const statusMatch = buildStatusFilter.value === '全部' || buildStatusFilter.value === status
+  const batchMatch = buildSourceBatch.value === '全部批次' || buildSourceBatch.value === batch
+  return keywordMatch && statusMatch && batchMatch
+}
+
 const filteredEntityRows = computed(() => {
-  return entityRows.filter((row) => {
-    const keyword = buildSearchKeyword.value.trim()
-    const keywordMatch =
-      !keyword ||
-      row.name.includes(keyword) ||
-      row.type.includes(keyword) ||
-      row.match.includes(keyword)
-    if (buildStatusFilter.value === '全部') return keywordMatch
-    if (buildStatusFilter.value === '待审核') return keywordMatch && row.action.includes('待')
-    if (buildStatusFilter.value === '自动入库') return keywordMatch && row.action.includes('合并')
-    if (buildStatusFilter.value === '冲突数据') return keywordMatch && row.action.includes('新实体')
-    return keywordMatch
-  })
+  return entityRows.filter((row) =>
+    matchesBuildFilters([row.name, row.type, row.match, row.auditTitle], row.status, row.batch),
+  )
+})
+
+const filteredRelationRows = computed(() => {
+  return relationRows.filter((row) =>
+    matchesBuildFilters([row.source, row.target, row.relation, row.evidence, row.auditTitle], row.status, row.batch),
+  )
+})
+
+const filteredPropertyRows = computed(() => {
+  return propertyRows.filter((row) =>
+    matchesBuildFilters([row.object, row.property, row.rule, row.auditTitle], row.status, row.batch),
+  )
+})
+
+const buildResultCount = computed(() => {
+  if (activeBuildTab.value === 'entity') return filteredEntityRows.value.length
+  if (activeBuildTab.value === 'relation') return filteredRelationRows.value.length
+  if (activeBuildTab.value === 'property') return filteredPropertyRows.value.length
+  return ruleRows.length
+})
+
+const buildResultLabel = computed(() => {
+  if (activeBuildTab.value === 'entity') return '实体'
+  if (activeBuildTab.value === 'relation') return '关系'
+  if (activeBuildTab.value === 'property') return '属性'
+  return '规则'
 })
 
 const auditQueue = ref([
   {
     id: 'audit-1',
+    batch: 'KG-INC-20260706-01',
     title: '实体重复疑似冲突',
     status: '待审核',
     summary: '「张明远」与「Zhang Mingyuan」相似度 0.82',
+    targetCount: 2,
     actions: ['确认合并', '保留新实体'],
   },
   {
     id: 'audit-2',
+    batch: 'KG-INC-20260706-01',
     title: '关系证据不足',
     status: '待审核',
     summary: '企业合作关系仅来自单一网页来源',
+    targetCount: 1,
     actions: ['通过', '退回规则'],
   },
   {
     id: 'audit-3',
+    batch: 'KG-INC-20260706-02',
     title: '属性来源不一致',
     status: '处理中',
     summary: '论文数量在不同数据源间相差 4 篇',
+    targetCount: 2,
     actions: ['采用新值', '保留旧值'],
   },
   {
     id: 'audit-4',
+    batch: 'KG-INC-20260706-02',
     title: '校友关系低置信度',
     status: '待审核',
     summary: '同导师关系缺少学籍交叉验证',
+    targetCount: 1,
     actions: ['通过', '驳回'],
   },
   {
     id: 'audit-5',
+    batch: 'KG-FULL-20260705-08',
     title: '产业链事件共现',
     status: '已通过',
     summary: 'TOP-N 事件与专家节点共现已确认',
+    targetCount: 1,
     actions: ['查看详情'],
   },
 ])
+const selectedTaskAuditQueue = computed(() =>
+  auditQueue.value.filter((item) => item.batch === selectedProcessingTask.value.batch),
+)
 
 async function runWithLoading(message: string, action?: () => void) {
   isActionLoading.value = true
@@ -460,6 +499,11 @@ function handleStartTask() {
   void runWithLoading('处理任务已启动，可在执行过程追踪中查看进度')
 }
 
+function openTraceModal(batch: string) {
+  selectedProcessingTaskBatch.value = batch
+  traceModalOpen.value = true
+}
+
 function handleExecuteService() {
   void runWithLoading(`${activeService.value.title} 调用成功，已刷新请求与响应结果`)
 }
@@ -470,25 +514,28 @@ function handleCopyEndpoint() {
 }
 
 function handleBuildSearch() {
-  showToast(`已筛选 ${filteredEntityRows.value.length} 条${activeBuildTab.value}记录`, 'info')
-}
-
-function openConstructionModal(action: ConstructionActionKey) {
-  activeConstructionAction.value = action
-  constructionModalOpen.value = true
-}
-
-function closeConstructionModal() {
-  constructionModalOpen.value = false
-}
-
-function handleConstructionSuccess(title: string) {
-  constructionModalOpen.value = false
-  showToast(`${title}已完成`)
+  showToast(`已筛选 ${buildResultCount.value} 条${buildResultLabel.value}记录`, 'info')
 }
 
 function handleAuditAction(itemTitle: string, action: string) {
   showToast(`${itemTitle}：${action}已提交`)
+}
+
+function resolveAuditBuildTab(title: string): 'entity' | 'relation' | 'property' {
+  if (title.includes('关系')) return 'relation'
+  if (title.includes('属性')) return 'property'
+  return 'entity'
+}
+
+function openAuditInConstruction(item: { title: string; summary: string; batch: string }) {
+  preserveBuildFilters.value = true
+  activeBuildTab.value = resolveAuditBuildTab(item.title)
+  buildSearchKeyword.value = item.title
+  buildStatusFilter.value = '待审核'
+  buildSourceBatch.value = item.batch
+  buildAuditContext.value = { title: item.title, batch: item.batch }
+  void router.push('/graph-construction')
+  showToast(`已跳转到图谱构建：${item.title}`, 'info')
 }
 
 function handleRowDetail(name: string) {
@@ -503,25 +550,19 @@ function handleRowDetail(name: string) {
   detailModalOpen.value = true
 }
 
-function handleOverviewTaskDetail(batch: string) {
-  detailModalPayload.value = {
-    title: batch,
-    entityType: '任务批次',
-    relations: '6 个阶段',
-    confidence: '0.91',
-    updatedAt: '2026-07-06 10:30',
-    evidence: ['覆盖接入、清洗、抽取、消歧、审核、入库全链路。', '可在 Scheduler TraceLog 查看阶段耗时。'],
-  }
-  detailModalOpen.value = true
-}
-
 watch(activeServiceKey, () => {
   selectedGraphNodeId.value = 'core'
 })
 
 watch(activeBuildTab, () => {
+  if (preserveBuildFilters.value) {
+    preserveBuildFilters.value = false
+    return
+  }
   buildSearchKeyword.value = ''
   buildStatusFilter.value = '全部'
+  buildSourceBatch.value = '全部批次'
+  buildAuditContext.value = null
 })
 
 const pageMeta = computed(() => {
@@ -541,8 +582,8 @@ const pageMeta = computed(() => {
       subtitle: '支持人工新增、合并、驳回与规则回写',
     },
     query: {
-      title: '核心子图查询',
-      subtitle: '先输入条件，再返回子图、结构化结果与证据链',
+      title: '综合图谱查询',
+      subtitle: '专家、企业、机构、论文、项目和事件在一张图中联动展示',
     },
     service: {
       title: activeService.value.title,
@@ -602,43 +643,6 @@ const pageMeta = computed(() => {
             <em>{{ item.count }}</em>
           </article>
         </div>
-      </section>
-
-      <section class="kg-panel">
-        <div class="kg-panel__header">
-          <h2 class="kg-panel__title">最近任务执行状态</h2>
-          <button class="kg-button kg-button--secondary" type="button" @click="handleOverviewTaskDetail(taskRows[0]?.batch ?? '任务批次')">
-            查看任务
-          </button>
-        </div>
-        <table class="platform-table">
-          <thead>
-            <tr>
-              <th>任务批次</th>
-              <th>数据源</th>
-              <th>当前阶段</th>
-              <th>状态</th>
-              <th>实体</th>
-              <th>关系</th>
-              <th>冲突</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in taskRows" :key="row.batch">
-              <td>
-                <button class="platform-link-button" type="button" @click="handleOverviewTaskDetail(row.batch)">
-                  {{ row.batch }}
-                </button>
-              </td>
-              <td>{{ row.source }}</td>
-              <td>{{ row.stage }}</td>
-              <td><span class="platform-status">{{ row.status }}</span></td>
-              <td>{{ row.entities }}</td>
-              <td>{{ row.relations }}</td>
-              <td>{{ row.conflicts }}</td>
-            </tr>
-          </tbody>
-        </table>
       </section>
 
       <section class="platform-overview-grid">
@@ -722,57 +726,79 @@ const pageMeta = computed(() => {
         </div>
       </section>
 
-      <section class="kg-panel platform-discovery">
+      <section v-if="false" class="kg-panel platform-discovery" aria-hidden="true">
         <div class="kg-panel__header">
           <h2 class="kg-panel__title">增量发现结果</h2>
         </div>
-        <div class="platform-discovery__grid">
-          <article v-for="row in discoveryRows" :key="row.type">
-            <div>
-              <span>{{ row.type }}</span>
-              <strong>{{ row.count }}</strong>
-            </div>
-            <p>{{ row.desc }}</p>
-          </article>
-        </div>
       </section>
 
-      <section class="kg-panel platform-gates">
+      <section v-if="false" class="kg-panel platform-gates" aria-hidden="true">
         <div class="kg-panel__header">
           <h2 class="kg-panel__title">质量闸口</h2>
         </div>
-        <div class="platform-gates__grid">
-          <article v-for="gate in qualityGates" :key="gate.label">
-            <span>{{ gate.label }}</span>
-            <strong>{{ gate.value }}</strong>
-            <p>{{ gate.desc }}</p>
-          </article>
-        </div>
       </section>
 
-      <section class="kg-panel platform-processing-flow">
+      <section class="kg-panel platform-task-list">
         <div class="kg-panel__header">
-          <h2 class="kg-panel__title">执行过程追踪</h2>
+          <h2 class="kg-panel__title">处理任务列表</h2>
+          <span>选中：{{ selectedProcessingTask.batch }}</span>
         </div>
-        <div class="platform-timeline">
-          <article v-for="item in pipeline" :key="item.name">
-            <i></i>
-            <div>
-              <strong>{{ item.name }}</strong>
-              <p>{{ item.desc }}</p>
-            </div>
-            <span>{{ item.count }}</span>
-          </article>
-        </div>
+        <table class="platform-table">
+          <thead>
+            <tr>
+              <th>任务批次</th>
+              <th>数据源</th>
+              <th>当前阶段</th>
+              <th>状态</th>
+              <th>实体</th>
+              <th>关系</th>
+              <th>冲突</th>
+              <th>执行过程</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in taskRows"
+              :key="row.batch"
+              :class="{ 'platform-task-row--active': row.batch === selectedProcessingTask.batch }"
+              @click="selectedProcessingTaskBatch = row.batch"
+            >
+              <td>
+                <button class="platform-link-button" type="button" @click.stop="selectedProcessingTaskBatch = row.batch">
+                  {{ row.batch }}
+                </button>
+              </td>
+              <td>{{ row.source }}</td>
+              <td>{{ row.stage }}</td>
+              <td><span class="platform-status">{{ row.status }}</span></td>
+              <td>{{ row.entities }}</td>
+              <td>{{ row.relations }}</td>
+              <td>{{ row.conflicts }}</td>
+              <td>
+                <button class="platform-icon-action" type="button" title="查看执行过程" @click.stop="openTraceModal(row.batch)">
+                  流程
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <aside class="kg-panel platform-review">
         <div class="kg-panel__header">
           <h2 class="kg-panel__title">人工审核队列</h2>
-          <span>{{ auditQueue.filter((item) => item.status === '待审核').length }} 条</span>
+          <span>{{ selectedTaskAuditQueue.filter((item) => item.status === '待审核').length }} 条</span>
         </div>
         <div class="platform-review__body">
-          <article v-for="item in auditQueue" :key="item.id">
+          <article
+            v-for="item in selectedTaskAuditQueue"
+            :key="item.id"
+            class="platform-review__item"
+            tabindex="0"
+            role="button"
+            @click="openAuditInConstruction(item)"
+            @keydown.enter="openAuditInConstruction(item)"
+          >
             <div class="platform-review__title">
               <strong>{{ item.title }}</strong>
               <span :class="['platform-review__tag', `is-${item.status}`]">{{ item.status }}</span>
@@ -783,7 +809,7 @@ const pageMeta = computed(() => {
                 v-for="action in item.actions"
                 :key="action"
                 type="button"
-                @click="handleAuditAction(item.title, action)"
+                @click.stop="handleAuditAction(item.title, action)"
               >
                 {{ action }}
               </button>
@@ -806,12 +832,7 @@ const pageMeta = computed(() => {
         </div>
 
         <div class="platform-manual-toolbar">
-          <button type="button" @click="openConstructionModal('entity')">新增实体</button>
-          <button type="button" @click="openConstructionModal('relation')">新增关系</button>
-          <button type="button" @click="openConstructionModal('property')">新增属性</button>
-          <button type="button" @click="openConstructionModal('batch-audit')">批量审核</button>
-          <button type="button" @click="openConstructionModal('rule-import')">导入规则</button>
-          <span>人工维护与低置信度审核，变更即时写入图谱</span>
+          <span>图谱构建页仅展示治理结果与人工审核记录，页面内不提供新增或传入数据入口</span>
         </div>
 
         <div class="platform-manage-filter">
@@ -830,12 +851,21 @@ const pageMeta = computed(() => {
           </label>
           <label>
             <span>来源批次</span>
-            <select>
-              <option>KG-INC-20260706-01</option>
-              <option>KG-INC-20260706-02</option>
+            <select v-model="buildSourceBatch">
+              <option v-for="item in buildBatchOptions" :key="item">{{ item }}</option>
             </select>
           </label>
           <button type="button" @click="handleBuildSearch">查询</button>
+        </div>
+
+        <div class="platform-build-context">
+          <strong v-if="buildAuditContext">来自人工审核：{{ buildAuditContext.title }}</strong>
+          <strong v-else>当前视图结果</strong>
+          <span>
+            {{ buildSourceBatch === '全部批次' ? '全部批次' : buildSourceBatch }}
+            / {{ buildStatusFilter }}
+            / {{ buildResultCount }} 条{{ buildResultLabel }}
+          </span>
         </div>
 
         <table v-if="activeBuildTab === 'entity'" class="platform-table">
@@ -858,7 +888,7 @@ const pageMeta = computed(() => {
         <table v-else-if="activeBuildTab === 'relation'" class="platform-table">
           <thead><tr><th>源实体</th><th>目标实体</th><th>关系类型</th><th>证据</th><th>置信度</th><th>状态</th><th>人工操作</th></tr></thead>
           <tbody>
-            <tr v-for="row in relationRows" :key="`${row.source}-${row.target}-${row.relation}`">
+            <tr v-for="row in filteredRelationRows" :key="`${row.source}-${row.target}-${row.relation}`">
               <td>{{ row.source }}</td><td>{{ row.target }}</td><td>{{ row.relation }}</td><td>{{ row.evidence }}</td><td>{{ row.confidence }}</td><td>{{ row.status }}</td>
               <td>
                 <div class="platform-row-actions">
@@ -875,7 +905,7 @@ const pageMeta = computed(() => {
         <table v-else-if="activeBuildTab === 'property'" class="platform-table">
           <thead><tr><th>对象</th><th>动态属性</th><th>原值</th><th>新值</th><th>处理规则</th><th>人工操作</th></tr></thead>
           <tbody>
-            <tr v-for="row in propertyRows" :key="`${row.object}-${row.property}`">
+            <tr v-for="row in filteredPropertyRows" :key="`${row.object}-${row.property}`">
               <td>{{ row.object }}</td><td>{{ row.property }}</td><td>{{ row.oldValue }}</td><td>{{ row.newValue }}</td><td>{{ row.rule }}</td>
               <td>
                 <div class="platform-row-actions">
@@ -929,7 +959,7 @@ const pageMeta = computed(() => {
         </div>
         <div class="platform-form-grid">
           <label>
-            <span>查询对象</span>
+            <span>图谱范围</span>
             <select v-model="selectedQueryType">
               <option v-for="item in queryTypes" :key="item">{{ item }}</option>
             </select>
@@ -953,8 +983,8 @@ const pageMeta = computed(() => {
 
       <section class="kg-panel platform-query-graph">
         <div class="kg-panel__header">
-          <h2 class="kg-panel__title">核心子图展示</h2>
-          <span>{{ querySummary }}</span>
+          <h2 class="kg-panel__title">综合图谱展示</h2>
+          <span>{{ querySummary }} · {{ queryGraphStats }}</span>
         </div>
         <KgGraphCanvas
           :nodes="queryGraphPreset.nodes"
@@ -968,10 +998,11 @@ const pageMeta = computed(() => {
 
       <aside class="kg-panel platform-detail">
         <div class="kg-panel__header">
-          <h2 class="kg-panel__title">结构化结果</h2>
+          <h2 class="kg-panel__title">节点结构化结果</h2>
         </div>
         <div class="platform-detail__body">
           <dl>
+            <div><dt>图谱范围</dt><dd>{{ graphEntitySummary }}</dd></div>
             <div><dt>核心实体</dt><dd>{{ selectedQueryNode.label }} / {{ selectedQueryNode.entityType }}</dd></div>
             <div><dt>命中关系</dt><dd>{{ selectedQueryNode.relations }}</dd></div>
             <div><dt>置信度</dt><dd>{{ selectedQueryNode.confidence.toFixed(2) }}</dd></div>
@@ -1171,12 +1202,25 @@ print(response.json())</pre>
       @close="detailModalOpen = false"
     />
 
-    <ConstructionActionModal
-      :open="constructionModalOpen"
-      :action="activeConstructionAction"
-      @close="closeConstructionModal"
-      @success="handleConstructionSuccess"
-    />
+    <div v-if="traceModalOpen" class="platform-modal-mask" @click.self="traceModalOpen = false">
+      <section class="kg-panel platform-trace-modal" role="dialog" aria-modal="true">
+        <div class="kg-panel__header">
+          <h2 class="kg-panel__title">执行过程追踪</h2>
+          <span>{{ selectedProcessingTask.batch }} / {{ selectedProcessingTask.stage }}</span>
+          <button class="platform-modal-close" type="button" @click="traceModalOpen = false">关闭</button>
+        </div>
+        <div class="platform-timeline">
+          <article v-for="item in pipeline" :key="item.name">
+            <i></i>
+            <div>
+              <strong>{{ item.name }}</strong>
+              <p>{{ item.desc }}</p>
+            </div>
+            <span>{{ item.count }}</span>
+          </article>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -1500,6 +1544,25 @@ print(response.json())</pre>
   background: #f8fbff;
 }
 
+.platform-table tbody tr.platform-task-row--active td {
+  background: #eef5ff;
+}
+
+.platform-icon-action {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid #bdd7ff;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.platform-icon-action:hover {
+  background: var(--primary-subtle);
+}
+
 .platform-build-footer {
   display: flex;
   flex-wrap: wrap;
@@ -1517,7 +1580,7 @@ print(response.json())</pre>
 .platform-processing {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  grid-template-rows: auto auto auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   padding: 14px;
   border: 1px solid rgba(191, 215, 250, 0.96);
@@ -1531,11 +1594,22 @@ print(response.json())</pre>
   align-content: start;
 }
 
-.platform-processing-flow,
+.platform-task-list {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  overflow: auto;
+}
+
 .platform-review {
   display: grid;
   grid-template-rows: auto 1fr;
   align-content: start;
+}
+
+.platform-review {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .platform-config {
@@ -1625,6 +1699,34 @@ print(response.json())</pre>
   font-weight: 600;
 }
 
+.platform-modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(16, 38, 76, 0.28);
+}
+
+.platform-trace-modal {
+  width: min(760px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.platform-modal-close {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #bdd7ff;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--primary);
+  cursor: pointer;
+}
+
 .platform-review__body {
   display: grid;
   gap: 12px;
@@ -1639,6 +1741,18 @@ print(response.json())</pre>
   border: 1px solid #e8edf6;
   border-radius: var(--radius-lg);
   background: #fbfdff;
+}
+
+.platform-review__item {
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.platform-review__item:hover,
+.platform-review__item:focus-visible {
+  outline: 0;
+  border-color: #bdd7ff;
+  background: #f3f8ff;
 }
 
 .platform-review strong,
@@ -2025,6 +2139,22 @@ print(response.json())</pre>
   cursor: pointer;
 }
 
+.platform-build-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.platform-build-context strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
 .platform-row-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2187,10 +2317,24 @@ print(response.json())</pre>
 }
 
 .platform-query {
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: auto minmax(460px, 1fr);
+  align-items: stretch;
 }
 
-.platform-query-graph,
+.platform-query-graph {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 480px;
+  overflow: hidden;
+}
+
+.platform-query > .platform-detail {
+  grid-column: 2;
+  grid-row: 2;
+  overflow: auto;
+}
+
 .platform-service-run,
 .platform-detail,
 .platform-service-debug,
@@ -2442,6 +2586,7 @@ print(response.json())</pre>
 .platform-node.is-paper circle { fill: #762bd7; }
 .platform-node.is-topic circle { fill: #1f8ff1; }
 .platform-node.is-project circle { fill: #eb2aa3; }
+.platform-node.is-event circle { fill: var(--graph-gold, #f59e0b); }
 
 .platform-node text {
   fill: #343b48;
@@ -2857,7 +3002,6 @@ print(response.json())</pre>
 }
 
 @media (max-width: 1280px) {
-  .platform-query,
   .platform-service:not(.platform-service--api) {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto minmax(0, 1fr);
@@ -2881,6 +3025,28 @@ print(response.json())</pre>
 
   .platform-service-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .platform-query {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+
+  .platform-query-graph,
+  .platform-query > .platform-detail {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .platform-query-graph {
+    min-height: 460px;
+  }
+
+  .platform-build-context {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
