@@ -9,17 +9,20 @@ const props = withDefaults(
     edges: GraphEdgeData[]
     activeCategories?: string[] | null
     selectedNodeId?: string | null
+    selectedEdgeId?: string | null
     ariaLabel?: string
   }>(),
   {
     activeCategories: null,
     selectedNodeId: null,
+    selectedEdgeId: null,
     ariaLabel: '知识图谱',
   },
 )
 
 const emit = defineEmits<{
   selectNode: [node: GraphNodeData]
+  selectEdge: [edge: GraphEdgeData]
 }>()
 
 const viewBox = '0 0 760 430'
@@ -50,8 +53,11 @@ function isEdgeActive(edge: GraphEdgeData) {
 }
 
 function edgeClass(edge: GraphEdgeData) {
-  if (!isEdgeActive(edge)) return 'platform-network-line is-dimmed'
-  return `platform-network-line ${edgeToneMap[edge.category] ?? 'is-primary'}`
+  const classes = ['platform-network-line']
+  if (!isEdgeActive(edge)) classes.push('is-dimmed')
+  else classes.push(edgeToneMap[edge.category] ?? 'is-primary')
+  if (props.selectedEdgeId === edge.id) classes.push('is-selected')
+  return classes.join(' ')
 }
 
 function nodeClass(node: GraphNodeData) {
@@ -63,6 +69,29 @@ function nodeClass(node: GraphNodeData) {
   }
   if (props.selectedNodeId === node.id) classes.push('is-selected')
   return classes
+}
+
+function nodeRadius(node: GraphNodeData) {
+  return node.nodeType === 'main' ? 16 : Math.min(node.radius ?? 12, 13)
+}
+
+function nodeShape(_node: GraphNodeData) {
+  return 'circle'
+}
+
+function polygonPoints(node: GraphNodeData) {
+  const radius = nodeRadius(node)
+  if (nodeShape(node) === 'diamond') {
+    return `0,${-radius} ${radius},0 0,${radius} ${-radius},0`
+  }
+  return [
+    `${-radius * 0.86},${-radius * 0.5}`,
+    `0,${-radius}`,
+    `${radius * 0.86},${-radius * 0.5}`,
+    `${radius * 0.86},${radius * 0.5}`,
+    `0,${radius}`,
+    `${-radius * 0.86},${radius * 0.5}`,
+  ].join(' ')
 }
 
 function getNodeById(id: string) {
@@ -84,6 +113,7 @@ function handleWheel(event: WheelEvent) {
 
 function handlePointerDown(event: PointerEvent) {
   if ((event.target as Element).closest('.platform-node')) return
+  if ((event.target as Element).closest('.platform-network-line, .platform-network-hit-area')) return
   isPanning.value = true
   panStart.value = {
     x: event.clientX,
@@ -107,6 +137,11 @@ function handlePointerUp(event: PointerEvent) {
 
 function handleNodeClick(node: GraphNodeData) {
   emit('selectNode', node)
+}
+
+function handleEdgeClick(edge: GraphEdgeData) {
+  if (!isEdgeActive(edge)) return
+  emit('selectEdge', edge)
 }
 
 function resetView() {
@@ -166,15 +201,17 @@ onUnmounted(() => {
             :y1="getLineCoords(edge)!.y1"
             :x2="getLineCoords(edge)!.x2"
             :y2="getLineCoords(edge)!.y2"
+            @click.stop="handleEdgeClick(edge)"
           />
-          <text
-            v-if="getLineCoords(edge) && isEdgeActive(edge)"
-            class="platform-edge-label"
-            :x="(getLineCoords(edge)!.x1 + getLineCoords(edge)!.x2) / 2"
-            :y="(getLineCoords(edge)!.y1 + getLineCoords(edge)!.y2) / 2 - 6"
-          >
-            {{ edge.label }}
-          </text>
+          <line
+            v-if="getLineCoords(edge)"
+            class="platform-network-hit-area"
+            :x1="getLineCoords(edge)!.x1"
+            :y1="getLineCoords(edge)!.y1"
+            :x2="getLineCoords(edge)!.x2"
+            :y2="getLineCoords(edge)!.y2"
+            @click.stop="handleEdgeClick(edge)"
+          />
         </template>
         <g
           v-for="node in nodes"
@@ -183,7 +220,26 @@ onUnmounted(() => {
           :transform="`translate(${node.x} ${node.y})`"
           @click.stop="handleNodeClick(node)"
         >
-          <circle :r="node.radius ?? 24" />
+          <circle v-if="nodeShape(node) === 'circle'" class="node-shape" :r="nodeRadius(node)" />
+          <rect
+            v-else-if="nodeShape(node) === 'rect'"
+            class="node-shape"
+            :x="-nodeRadius(node)"
+            :y="-nodeRadius(node)"
+            :width="nodeRadius(node) * 2"
+            :height="nodeRadius(node) * 2"
+            rx="8"
+          />
+          <rect
+            v-else-if="nodeShape(node) === 'pill'"
+            class="node-shape"
+            :x="-nodeRadius(node) * 1.15"
+            :y="-nodeRadius(node) * 0.72"
+            :width="nodeRadius(node) * 2.3"
+            :height="nodeRadius(node) * 1.44"
+            rx="12"
+          />
+          <polygon v-else class="node-shape" :points="polygonPoints(node)" />
           <text>{{ node.label }}</text>
         </g>
       </g>
@@ -235,8 +291,8 @@ onUnmounted(() => {
   background:
     linear-gradient(#e8f1ff 1px, transparent 1px),
     linear-gradient(90deg, #e8f1ff 1px, transparent 1px),
-    linear-gradient(135deg, rgba(22, 93, 255, 0.06), rgba(20, 184, 166, 0.04)),
-    #fbfdff;
+    radial-gradient(circle at 22% 18%, rgba(22, 93, 255, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 247, 255, 0.94));
   background-size: 28px 28px, 28px 28px, auto, auto;
 }
 
@@ -245,82 +301,96 @@ onUnmounted(() => {
 }
 
 .platform-network-lines line {
-  stroke: #c8d3e3;
-  stroke-width: 1.2;
+  stroke: rgba(148, 163, 184, 0.28);
+  stroke-width: 0.9;
 }
 
 .platform-network-lines line.is-dimmed {
-  opacity: 0.28;
+  opacity: 0.18;
 }
 
 .platform-network-line {
-  stroke-width: 2.4;
-  marker-end: url(#graph-arrow);
+  stroke: rgba(100, 116, 139, 0.52);
+  stroke-width: 1.1;
+  cursor: pointer;
 }
 
 .platform-network-line.is-dimmed {
   opacity: 0.18;
+  cursor: default;
 }
 
-.platform-network-line.is-primary { stroke: var(--graph-blue); }
-.platform-network-line.is-green { stroke: var(--graph-green); }
-.platform-network-line.is-orange { stroke: var(--graph-orange); }
-.platform-network-line.is-purple { stroke: var(--graph-purple); }
+.platform-network-line.is-selected {
+  stroke: #165dff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px rgba(22, 93, 255, 0.22));
+}
 
-.platform-edge-label {
-  fill: var(--text-secondary);
-  font-size: 11px;
-  text-anchor: middle;
+.platform-network-line.is-primary,
+.platform-network-line.is-green,
+.platform-network-line.is-orange,
+.platform-network-line.is-purple {
+  stroke: rgba(100, 116, 139, 0.52);
+}
+
+.platform-network-hit-area {
+  stroke: transparent;
+  stroke-width: 18;
+  cursor: pointer;
+  pointer-events: stroke;
 }
 
 .platform-node {
   cursor: pointer;
 }
 
-.platform-node circle {
-  fill: var(--node-expert, #20bfc2);
+.platform-node .node-shape {
+  fill: var(--node-expert, #1e8ff3);
   stroke: #fff;
-  stroke-width: 2;
-  filter: drop-shadow(0 4px 8px rgba(53, 77, 112, 0.14));
-  transition: stroke-width 0.15s ease, filter 0.15s ease;
+  stroke-width: 1.2;
+  filter: drop-shadow(0 2px 5px rgba(53, 77, 112, 0.16));
+  transition: stroke-width 0.15s ease, filter 0.15s ease, transform 0.15s ease;
 }
 
-.platform-node--main circle,
-.platform-node.is-main circle {
-  fill: var(--node-main, #1e8ff3);
-}
+.platform-node--main .node-shape,
+.platform-node.is-main .node-shape,
+.platform-node.is-expert .node-shape { fill: #1e8ff3; }
+.platform-node.is-org .node-shape,
+.platform-node.is-company .node-shape { fill: #48c914; }
+.platform-node.is-paper .node-shape { fill: #762bd7; }
+.platform-node.is-project .node-shape { fill: #ffad17; }
+.platform-node.is-event .node-shape { fill: #eb2aa3; }
+.platform-node.is-topic .node-shape { fill: #2f6bff; }
 
-.platform-node.is-expert circle { fill: var(--node-expert, #20bfc2); }
-.platform-node.is-org circle { fill: var(--node-org, #48c914); }
-.platform-node.is-company circle { fill: var(--node-company, #ffad17); }
-.platform-node.is-paper circle { fill: var(--node-paper, #762bd7); }
-.platform-node.is-topic circle { fill: var(--node-topic, #1f8ff1); }
-.platform-node.is-project circle { fill: var(--node-project, #eb2aa3); }
-.platform-node.is-event circle { fill: var(--graph-gold, #f59e0b); }
-
-.platform-node.is-selected circle {
-  stroke: var(--primary);
-  stroke-width: 3;
-  filter: drop-shadow(0 0 0 4px rgba(22, 93, 255, 0.18));
+.platform-node.is-selected .node-shape {
+  stroke: #10264c;
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 8px rgba(22, 93, 255, 0.28));
 }
 
 .platform-node text {
-  fill: #343b48;
-  font-size: 13px;
+  fill: #42526b;
+  font-size: 10px;
+  font-weight: 500;
   text-anchor: middle;
   dominant-baseline: hanging;
   pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 .platform-node--main text,
 .platform-node.is-main text {
-  fill: #fff;
-  font-size: 14px;
+  fill: #10264c;
+  font-size: 11px;
   font-weight: 600;
-  transform: translateY(-5px);
+  transform: translateY(18px);
+  stroke: rgba(255, 255, 255, 0.94);
 }
 
 .platform-node:not(.platform-node--main):not(.is-main) text {
-  transform: translateY(34px);
+  transform: translateY(16px);
 }
 </style>

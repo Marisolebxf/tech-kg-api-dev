@@ -16,17 +16,21 @@ const route = useRoute()
 const appStore = useAppStore()
 const pageTitle = computed(() => String(route.meta.title ?? '亿级知识图谱'))
 const routeError = ref('')
+const serviceNavCollapsed = ref(false)
 const serviceNavItems = [
-  { to: '/expert-direct', label: '科技专家直接关系' },
-  { to: '/node-indirect', label: '科技单节点间接关系' },
-  { to: '/two-point-achievement', label: '科技两点合作成果' },
-  { to: '/expert-colleague', label: '科技专家同事关系' },
-  { to: '/expert-alumni', label: '科技专家校友关系' },
-  { to: '/paper-cooperation', label: '专家论文合作关系' },
-  { to: '/enterprise-relation', label: '重点科技企业关系' },
-  { to: '/industry-chain-event', label: '产业链点事件关系' },
-  { to: '/industry-chain-panorama', label: '科技产业链全景图' },
+  { to: '/expert-direct', label: '专家直接关系', fullLabel: '科技专家直接关系' },
+  { to: '/node-indirect', label: '单节点间接关系', fullLabel: '科技单节点间接关系' },
+  { to: '/two-point-achievement', label: '两点合作成果', fullLabel: '科技两点合作成果' },
+  { to: '/expert-colleague', label: '专家同事关系', fullLabel: '科技专家同事关系' },
+  { to: '/expert-alumni', label: '专家校友关系', fullLabel: '科技专家校友关系' },
+  { to: '/paper-cooperation', label: '论文合作关系', fullLabel: '专家论文合作关系' },
+  { to: '/enterprise-relation', label: '重点企业关系', fullLabel: '重点科技企业关系' },
+  { to: '/industry-chain-event', label: '产业链事件关系', fullLabel: '产业链点事件关系' },
+  { to: '/industry-chain-panorama', label: '产业链全景图', fullLabel: '科技产业链全景图' },
 ]
+const showServiceNavItems = computed(() => (
+  !appStore.collapsed && !serviceNavCollapsed.value
+))
 
 onErrorCaptured((error) => {
   routeError.value = error instanceof Error ? error.message : String(error)
@@ -75,19 +79,28 @@ onErrorCaptured((error) => {
               <img v-if="!appStore.collapsed" class="app-nav__arrow" :src="iconSidebarArrow" alt="" aria-hidden="true" />
             </RouterLink>
             <div v-if="!appStore.collapsed" class="app-nav__group">服务调用</div>
-            <div class="app-nav__item app-nav__item--top app-nav__item--open" :title="appStore.collapsed ? '业务服务' : undefined">
+            <button
+              class="app-nav__item app-nav__item--top app-nav__item--button"
+              :class="{ 'app-nav__item--open': !serviceNavCollapsed }"
+              type="button"
+              :title="appStore.collapsed ? '业务服务' : undefined"
+              :aria-expanded="!serviceNavCollapsed"
+              @click="serviceNavCollapsed = !serviceNavCollapsed"
+            >
               <img class="app-nav__icon" :src="navReasoning" alt="" aria-hidden="true" />
               <span v-if="!appStore.collapsed">业务服务</span>
               <img v-if="!appStore.collapsed" class="app-nav__arrow" :src="iconSidebarArrow" alt="" aria-hidden="true" />
-            </div>
+            </button>
             <RouterLink
-              v-for="item in serviceNavItems"
+              v-for="(item, index) in serviceNavItems"
               :key="item.to"
-              v-if="!appStore.collapsed"
+              v-if="showServiceNavItems"
               class="app-nav__item app-nav__item--sub"
               active-class="app-nav__item--active"
               :to="item.to"
+              :title="item.fullLabel"
             >
+              <em>{{ String(index + 1).padStart(2, '0') }}</em>
               <span>{{ item.label }}</span>
             </RouterLink>
           </nav>
@@ -171,23 +184,23 @@ onErrorCaptured((error) => {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding-bottom: 16px;
+  gap: 12px;
+  height: 48px;
+  padding-bottom: 18px;
   border-bottom: 1px solid rgba(84, 139, 220, 0.22);
 }
 
 .app-brand__logo {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
 }
 
 .app-brand__name {
   flex: 0 0 auto;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 600;
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 700;
   color: #10264c;
   white-space: nowrap;
 }
@@ -196,8 +209,8 @@ onErrorCaptured((error) => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   margin-left: auto;
   padding: 0;
   border: 0;
@@ -207,8 +220,8 @@ onErrorCaptured((error) => {
 }
 
 .app-brand__menu img {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   opacity: 0.72;
 }
@@ -226,7 +239,7 @@ onErrorCaptured((error) => {
 }
 
 .app-shell.is-collapsed .app-nav__item {
-  grid-template-columns: 18px;
+  grid-template-columns: 22px;
   justify-content: center;
   padding-inline: 0;
 }
@@ -260,21 +273,41 @@ onErrorCaptured((error) => {
 
 .app-nav__item {
   display: grid;
-  grid-template-columns: 18px minmax(0, max-content) 1fr;
+  grid-template-columns: 22px minmax(0, 1fr) 14px;
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
-  padding: 0 10px;
+  gap: 14px;
+  min-height: 54px;
+  padding: 0 16px;
   border: 1px solid transparent;
   border-radius: 6px;
   color: #243b63;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 20px;
+  line-height: 28px;
   white-space: nowrap;
   transition:
     background 0.16s ease,
     border-color 0.16s ease,
     color 0.16s ease;
+}
+
+.app-nav__item--button {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  border-color: transparent;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-nav__item--button:focus {
+  outline: none;
+}
+
+.app-nav__item--button:focus-visible {
+  border-color: rgba(86, 149, 239, 0.52);
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .app-nav__item:hover {
@@ -284,17 +317,17 @@ onErrorCaptured((error) => {
 }
 
 .app-nav__group {
-  margin: 14px 8px 6px;
+  margin: 18px 8px 10px;
   color: #567198;
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 17px;
+  line-height: 25px;
   font-weight: 500;
   letter-spacing: 0;
 }
 
 .app-nav__icon {
-  width: 17px;
-  height: 17px;
+  width: 21px;
+  height: 21px;
   align-self: center;
   justify-self: center;
   object-fit: contain;
@@ -302,11 +335,12 @@ onErrorCaptured((error) => {
 }
 
 .app-nav__arrow {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   justify-self: end;
   object-fit: contain;
   opacity: 0.52;
+  transition: transform 0.16s ease;
 }
 
 .app-nav__item--open {
@@ -321,7 +355,7 @@ onErrorCaptured((error) => {
   position: relative;
   z-index: 1;
   grid-template-columns: 1fr;
-  width: min(150px, calc(100% - 28px));
+  width: min(246px, calc(100% - 28px));
   margin-left: 28px;
   color: #165dff;
   border-color: rgba(87, 150, 242, 0.76);
@@ -339,7 +373,7 @@ onErrorCaptured((error) => {
 }
 
 .app-nav__item--top.app-nav__item--active {
-  grid-template-columns: 18px minmax(0, max-content) 1fr;
+  grid-template-columns: 22px minmax(0, 1fr) 14px;
   width: 100%;
   margin-left: 0;
 }
@@ -347,17 +381,51 @@ onErrorCaptured((error) => {
 .app-nav__item--sub {
   position: relative;
   z-index: 1;
-  grid-template-columns: 1fr;
-  width: min(150px, calc(100% - 28px));
-  margin-left: 28px;
-  background: transparent;
+  grid-template-columns: 36px minmax(0, 1fr);
+  width: min(250px, calc(100% - 34px));
+  min-height: 56px;
+  margin: 4px 0 4px 34px;
+  padding: 0 14px;
+  border-color: rgba(179, 209, 255, 0.42);
+  background: rgba(255, 255, 255, 0.42);
+  color: #2e4770;
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.app-nav__item--sub em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(22, 93, 255, 0.08);
+  color: #4c74b4;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.app-nav__item--sub span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-nav__item--sub.app-nav__item--active {
   color: var(--primary);
-  border: 1px solid #cfe0ff;
-  background: #eef5ff;
-  box-shadow: none;
+  border: 1px solid rgba(87, 150, 242, 0.72);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(226, 239, 255, 0.96)),
+    #eef5ff;
+  box-shadow: inset 3px 0 0 #165dff, 0 8px 18px rgba(22, 93, 255, 0.12);
+}
+
+.app-nav__item--sub.app-nav__item--active em {
+  background: var(--primary);
+  color: #fff;
 }
 
 .app-user {
@@ -369,21 +437,21 @@ onErrorCaptured((error) => {
   width: 100%;
   min-width: 0;
   margin-top: 10px;
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 20px;
+  line-height: 28px;
   color: #243b63;
 }
 
 .app-user__avatar {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .app-user__message {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   margin-left: auto;
   object-fit: contain;
   opacity: 0.72;
@@ -433,12 +501,12 @@ onErrorCaptured((error) => {
   }
 
   .app-nav__item {
-    min-height: 36px;
+    min-height: 48px;
   }
 
   .app-nav__item--sub,
   .app-nav__item--active {
-    width: min(148px, calc(100% - 28px));
+    width: min(238px, calc(100% - 34px));
   }
 }
 
@@ -452,14 +520,14 @@ onErrorCaptured((error) => {
   }
 
   .app-nav__item {
-    min-height: 31px;
-    font-size: 14px;
-    line-height: 19px;
+    min-height: 42px;
+    font-size: 18px;
+    line-height: 25px;
   }
 
   .app-nav__item--sub,
   .app-nav__item--active {
-    width: min(148px, calc(100% - 28px));
+    width: min(238px, calc(100% - 34px));
   }
 }
 </style>

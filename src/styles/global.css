@@ -19,8 +19,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 44px;
-  padding: 0 14px;
+  min-height: 54px;
+  padding: 0 18px;
   border-bottom: 1px solid rgba(191, 215, 250, 0.96);
   background:
     linear-gradient(90deg, rgba(22, 93, 255, 0.075), transparent 46%),
@@ -31,14 +31,14 @@
   position: relative;
   margin: 0;
   color: var(--text-primary);
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 20px;
+  line-height: 28px;
   font-weight: 600;
 }
 
 .kg-panel__title::before {
   position: absolute;
-  top: 3px;
+  top: 4px;
   left: -10px;
   width: 3px;
   height: 16px;
@@ -48,7 +48,7 @@
 }
 
 .kg-panel__body {
-  padding: 12px;
+  padding: 14px;
 }
 
 .kg-muted {
@@ -63,14 +63,14 @@
 
 .kg-stat__value {
   color: var(--text-primary);
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1.2;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .kg-stat__label {
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .kg-control {

@@ -40,15 +40,17 @@
   --space-24: 24px;
   --space-32: 32px;
   --header-height: 56px;
-  --sidebar-width: 216px;
+  --sidebar-width: 320px;
   --sidebar-width-collapsed: 72px;
   --control-height: 32px;
   --node-main: #1e8ff3;
-  --node-expert: #20bfc2;
+  --node-expert: #1e8ff3;
   --node-org: #48c914;
-  --node-company: #ffad17;
+  --node-company: #48c914;
   --node-paper: #762bd7;
-  --node-topic: #1f8ff1;
-  --node-project: #eb2aa3;
+  --node-topic: #2f6bff;
+  --node-project: #ffad17;
+  --node-event: #eb2aa3;
+  --node-chain: #14b8a6;
   --font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
 }
